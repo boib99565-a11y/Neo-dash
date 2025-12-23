@@ -30,7 +30,11 @@ class SoundEngine {
   }
 
   playNote(freq: number, type: OscillatorType = 'sine', duration: number = 0.1) {
+    if (!this.ctx || this.ctx.state === 'suspended') {
+      this.ctx?.resume();
+    }
     if (!this.ctx) return;
+    
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     
@@ -100,6 +104,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   const settingsRef = useRef<GameSettings>({ ...INITIAL_SETTINGS });
 
   const keysPressed = useRef<{ [key: string]: boolean }>({});
+  const touchActive = useRef<boolean>(false);
 
   const initGame = useCallback(() => {
     audio.init();
@@ -155,7 +160,6 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
         type = ObstacleType.BLOCK;
         width = 60;
         height = 60;
-        // High blocks require sliding or jumping
         y = GROUND_Y - height - (Math.random() > 0.45 ? 90 : 0);
       } else if (typeRand > 0.65) {
         type = ObstacleType.ORB;
@@ -206,7 +210,10 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
 
     settings.speed += 0.0006;
 
-    if (keysPressed.current[' '] || keysPressed.current['ArrowUp']) {
+    // Unified Input Logic (Keys or Touch)
+    const isJumping = keysPressed.current[' '] || keysPressed.current['ArrowUp'] || touchActive.current;
+
+    if (isJumping) {
       if (player.isGrounded) {
         player.vy = settings.jumpForce;
         player.isGrounded = false;
@@ -417,11 +424,26 @@ const GameCanvas: React.FC<GameCanvasProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => { keysPressed.current[e.key] = true; };
     const handleKeyUp = (e: KeyboardEvent) => { keysPressed.current[e.key] = false; };
+    const handleTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+        touchActive.current = true;
+        audio.init(); // Initialize audio on first touch for mobile browser compliance
+    };
+    const handleTouchEnd = (e: TouchEvent) => {
+        e.preventDefault();
+        touchActive.current = false;
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 

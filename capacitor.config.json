@@ -1,0 +1,10 @@
+
+{
+  "appId": "com.neondash.runner",
+  "appName": "Neon Dash",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
