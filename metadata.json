@@ -1,0 +1,5 @@
+{
+  "name": "Neon Dash Runner",
+  "description": "A high-octane, rhythm-based endless runner inspired by Geometry Dash. Features neon visuals, procedural beat-synced obstacles, and fluid jump/dash mechanics.",
+  "requestFramePermissions": []
+}
